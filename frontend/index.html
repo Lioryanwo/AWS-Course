@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academic Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="chat-app">
+    <header class="chat-header">
+      <h1>Academic Chat</h1>
+      <p class="tagline">Ask anything, learn faster, build better 🚀</p>
+    </header>
+
+    <main class="chat-window" id="chat-window" aria-live="polite">
+      <!-- Message bubbles are inserted here by script.js -->
+    </main>
+
+    <p class="error-message" id="error-message" hidden></p>
+
+    <form class="chat-input-area" id="chat-form">
+      <input
+        type="text"
+        id="chat-input"
+        placeholder="Type your question..."
+        autocomplete="off"
+        required
+      />
+      <button type="submit" id="send-button">Send</button>
+    </form>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
