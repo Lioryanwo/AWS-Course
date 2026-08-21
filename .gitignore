@@ -9,8 +9,8 @@ venv/
 *.env
 
 # Lambda packaging artifacts
-lambda/package/
-lambda/*.zip
+serverless-chatbot/lambda/package/
+serverless-chatbot/lambda/*.zip
 lambda-layer/
 lambda-layer.zip
 

@@ -203,20 +203,25 @@ Never commit API keys or other secrets to the repository.
 
 ## Project Structure
 
+This project lives in its own folder within the `AWS-Course` repository, which may contain other, unrelated AWS lab projects alongside it.
+
 ```text
-AWS-Lab8-chatbot/
+AWS-Course/
 │
-├── frontend/
-│   ├── index.html
-│   ├── script.js
-│   └── style.css
-│
-├── lambda/
-│   └── lambda_function.py
-│
-├── chat.py
 ├── .gitignore
-└── README.md
+│
+└── serverless-chatbot/
+    │
+    ├── frontend/
+    │   ├── index.html
+    │   ├── script.js
+    │   └── style.css
+    │
+    ├── lambda/
+    │   └── lambda_function.py
+    │
+    ├── chat.py
+    └── README.md
 ```
 
 ## Request Validation
