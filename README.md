@@ -4,32 +4,39 @@ A serverless multi-turn AI chatbot built with AWS and the OpenAI API.
 
 The project demonstrates how to build a simple full-stack chatbot using a static frontend, Amazon API Gateway, AWS Lambda, and OpenAI's Responses API.
 
+This project intentionally uses **Manually Managed Conversation State**: the browser — not the backend — owns the conversation. See [Architecture Decisions](#architecture-decisions) for why.
+
 ## Architecture
 
 ```text
-Browser
-  │
-  │  POST /chat
-  │  { messages: [...] }
-  ▼
-Amazon API Gateway
-  │
-  ▼
-AWS Lambda (Python)
-  │
-  │  OpenAI Responses API
-  ▼
-OpenAI
-  │
-  ▼
-AWS Lambda
-  │
-  ▼
-API Gateway
-  │
-  ▼
-Browser
+Browser / Amplify
+     ↓
+API Gateway REST API — POST /chat
+     ↓
+AWS Lambda — Python 3.11, x86_64
+     ↓
+OpenAI Responses API — gpt-4.1-nano
 ```
+
+## Architecture Decisions
+
+This project deliberately keeps state management simple and entirely client-side:
+
+- The browser stores the full conversation in a `messages[]` array.
+- The complete history is sent with every `POST /chat` request.
+- Lambda is completely stateless — it holds no memory between invocations.
+- Refreshing the page clears the conversation.
+- No DynamoDB or other database is used.
+- No OpenAI Conversations API or `previous_response_id` is used — history is passed explicitly on every call.
+
+Why this design was chosen:
+
+- Keeps the architecture simple and appropriate for an AWS course lab.
+- No database is required to demonstrate multi-turn conversation.
+- Lambda does not need to manage sessions, so it stays trivially stateless and easy to reason about.
+- The frontend is fully responsible for conversation continuity, which keeps the backend a thin, single-purpose function.
+
+This implementation intentionally does not use persistent server-side conversation storage. A production extension could use DynamoDB and a chat/session ID if persistent conversations across page refreshes or devices were required.
 
 ## Technologies
 
@@ -79,6 +86,15 @@ When the user sends a new message, the frontend sends the complete conversation 
 This allows the chatbot to maintain a multi-turn conversation while keeping the Lambda function completely stateless.
 
 Refreshing the browser clears the conversation history.
+
+In summary:
+
+- The browser stores the full conversation in `messages[]`.
+- The full history is sent with every `POST /chat` request.
+- Lambda is completely stateless.
+- Refreshing the page clears the conversation.
+- No DynamoDB or other database is used.
+- No OpenAI Conversations API or `previous_response_id` is used.
 
 ## Backend
 
@@ -243,7 +259,7 @@ Python 3.11
 Architecture: x86_64
 ```
 
-The OpenAI Python SDK and its dependencies are provided through a custom AWS Lambda Layer.
+The OpenAI Python SDK and its dependencies are provided through a custom AWS Lambda Layer named `openai-sdk-layer`.
 
 ## Verification
 
