@@ -1,0 +1,6 @@
+{
+  "orderId": "ORD-1001",
+  "product": "Laptop",
+  "quantity": 2,
+  "simulatePaymentFailure": false
+}

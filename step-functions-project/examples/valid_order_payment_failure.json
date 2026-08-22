@@ -1,0 +1,6 @@
+{
+  "orderId": "ORD-1003",
+  "product": "Monitor",
+  "quantity": 1,
+  "simulatePaymentFailure": true
+}
