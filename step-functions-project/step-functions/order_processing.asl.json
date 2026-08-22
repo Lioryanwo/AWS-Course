@@ -1,0 +1,53 @@
+{
+  "Comment": "Order Processing workflow demonstrating Step Functions Task, Choice, Retry, and Catch",
+  "StartAt": "ValidateOrder",
+  "States": {
+    "ValidateOrder": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:121125730756:function:validate-order",
+      "Next": "ChoiceValidOrder"
+    },
+    "ChoiceValidOrder": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.isValid",
+          "BooleanEquals": true,
+          "Next": "ProcessPayment"
+        }
+      ],
+      "Default": "RejectOrder"
+    },
+    "RejectOrder": {
+      "Type": "Succeed"
+    },
+    "ProcessPayment": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:121125730756:function:process-payment",
+      "Retry": [
+        {
+          "ErrorEquals": ["PaymentProcessingError"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["PaymentProcessingError"],
+          "ResultPath": "$.error",
+          "Next": "PaymentFailed"
+        }
+      ],
+      "Next": "OrderApproved"
+    },
+    "OrderApproved": {
+      "Type": "Succeed"
+    },
+    "PaymentFailed": {
+      "Type": "Fail",
+      "Error": "PaymentProcessingError",
+      "Cause": "Payment processing failed after retries were exhausted."
+    }
+  }
+}
