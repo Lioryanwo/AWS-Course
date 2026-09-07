@@ -1,0 +1,31 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Secrets / environment / credentials
+.env
+.env.*
+*.pem
+*.key
+credentials
+.aws/
+
+# Node (defensive - none currently in this project)
+node_modules/
+
+# Lambda packaging artifacts (generated, not source)
+lambda/*.zip
+lambda-layer/python/
+lambda-layer.zip
+
+# IDE / OS / temp
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.tmp
+*.log

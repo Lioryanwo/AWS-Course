@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Management System</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <header>
+    <div class="header-inner">
+      <div>
+        <h1>Order Management System</h1>
+        <p class="subtitle">Serverless, event-driven order management — every action below calls a live backend API.</p>
+      </div>
+      <div class="badges">
+        <span class="badge badge-aws">⚡ AWS Lambda + API Gateway</span>
+        <span id="api-status-badge" class="status-badge status-unknown"><span class="status-dot"></span> Checking API…</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Dashboard summary -->
+    <section class="panel dashboard-panel">
+      <h2>Dashboard</h2>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="summary-total-orders">–</div>
+          <div class="stat-label">Active Orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="summary-create-invocations">–</div>
+          <div class="stat-label">Create API Invocations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="summary-delete-invocations">–</div>
+          <div class="stat-label">Delete API Invocations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="summary-lambda-errors">–</div>
+          <div class="stat-label">Lambda Errors</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Orders -->
+    <section class="panel" id="orders-panel">
+      <div class="panel-header">
+        <h2>Orders</h2>
+        <span id="orders-status" class="status-pill" hidden></span>
+      </div>
+
+      <form id="create-order-form" class="inline-form">
+        <input type="text" id="create-description" placeholder="Order description" required />
+        <input type="number" id="create-price" placeholder="Price" step="0.01" required />
+        <button type="submit" class="btn btn-success">Create Order</button>
+      </form>
+
+      <div class="toolbar">
+        <button id="refresh-orders" class="btn btn-secondary">Refresh Orders</button>
+        <label>
+          Sort:
+          <select id="orders-sort">
+            <option value="asc">Oldest first</option>
+            <option value="desc">Newest first</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="table-scroll">
+        <table id="orders-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Description</th>
+              <th>Price</th>
+              <th>Created</th>
+              <th>Last Modified</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="detail-forms">
+        <form id="get-order-form" class="inline-form">
+          <input type="text" id="get-order-id" placeholder="Order ID" required />
+          <button type="submit" class="btn btn-primary">Get Order</button>
+        </form>
+
+        <form id="update-order-form" class="inline-form">
+          <input type="text" id="update-order-id" placeholder="Order ID" required />
+          <input type="text" id="update-description" placeholder="New description (optional)" />
+          <input type="number" id="update-price" placeholder="New price (optional)" step="0.01" />
+          <button type="submit" class="btn btn-warning">Update Order</button>
+        </form>
+
+        <form id="delete-order-form" class="inline-form">
+          <input type="text" id="delete-order-id" placeholder="Order ID" required />
+          <button type="submit" class="btn btn-danger">Delete Order</button>
+        </form>
+      </div>
+
+      <details class="api-response">
+        <summary>API Response</summary>
+        <pre class="result" id="orders-result">No action performed yet.</pre>
+      </details>
+    </section>
+
+    <!-- Notifications -->
+    <section class="panel" id="notifications-panel">
+      <div class="panel-header">
+        <h2>Delete Notifications</h2>
+        <span id="notifications-status" class="status-pill" hidden></span>
+      </div>
+      <p class="hint-text">Subscribing requires confirming a link sent by AWS SNS to the email address before notifications begin arriving.</p>
+
+      <div class="notification-cards">
+        <div class="sub-card">
+          <h3>Subscribe</h3>
+          <form id="subscribe-form" class="inline-form">
+            <input type="email" id="subscribe-email" placeholder="Email address" required />
+            <button type="submit" class="btn btn-success">Subscribe</button>
+          </form>
+        </div>
+        <div class="sub-card">
+          <h3>Unsubscribe</h3>
+          <form id="unsubscribe-form" class="inline-form">
+            <input type="email" id="unsubscribe-email" placeholder="Email address" required />
+            <button type="submit" class="btn btn-danger">Unsubscribe</button>
+          </form>
+        </div>
+      </div>
+
+      <details class="api-response">
+        <summary>API Response</summary>
+        <pre class="result" id="notifications-result">No action performed yet.</pre>
+      </details>
+    </section>
+
+    <!-- Reports -->
+    <section class="panel" id="reports-panel">
+      <div class="panel-header">
+        <h2>Deleted Orders Report</h2>
+        <span id="reports-status" class="status-pill" hidden></span>
+      </div>
+      <button id="generate-summary" class="btn btn-primary btn-lg">Generate PDF Summary</button>
+      <div id="reports-summary-info" class="summary-info" hidden>
+        <span id="reports-deleted-count"></span>
+        <a id="reports-download-link" class="btn btn-success" target="_blank" rel="noopener noreferrer" hidden>Download PDF</a>
+      </div>
+
+      <details class="api-response">
+        <summary>API Response</summary>
+        <pre class="result" id="reports-result">No action performed yet.</pre>
+      </details>
+    </section>
+
+    <!-- Metrics -->
+    <section class="panel" id="metrics-panel">
+      <div class="panel-header">
+        <h2>System Metrics <span class="hint">(CloudWatch, last 24h)</span></h2>
+        <span id="metrics-status" class="status-pill" hidden></span>
+      </div>
+      <button id="refresh-metrics" class="btn btn-secondary">Refresh Metrics</button>
+      <div class="metrics-grid" id="metrics-grid"></div>
+
+      <details class="api-response">
+        <summary>API Response</summary>
+        <pre class="result" id="metrics-result">No action performed yet.</pre>
+      </details>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

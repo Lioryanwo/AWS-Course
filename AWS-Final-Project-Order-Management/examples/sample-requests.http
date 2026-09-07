@@ -1,0 +1,56 @@
+### These are sample requests against the deployed API, used to populate the
+### "APIs List" table in the final deliverable document. Replace {{baseUrl}}
+### with the deployed API Gateway invoke URL before running.
+
+@baseUrl = https://REPLACE_WITH_API_GATEWAY_INVOKE_URL
+
+### Create order
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+  "description": "Wireless mouse",
+  "price": 19.99
+}
+
+### Get all orders (sorted by creation date, oldest first)
+GET {{baseUrl}}/orders?order=asc
+
+### Get all orders (newest first)
+GET {{baseUrl}}/orders?order=desc
+
+### Get a specific order
+GET {{baseUrl}}/orders/REPLACE_WITH_ORDER_ID
+
+### Update an order
+PUT {{baseUrl}}/orders/REPLACE_WITH_ORDER_ID
+Content-Type: application/json
+
+{
+  "price": 24.99
+}
+
+### Delete an order
+DELETE {{baseUrl}}/orders/REPLACE_WITH_ORDER_ID
+
+### Subscribe to delete notifications
+POST {{baseUrl}}/subscriptions
+Content-Type: application/json
+
+{
+  "email": "student@example.com"
+}
+
+### Unsubscribe from delete notifications
+POST {{baseUrl}}/subscriptions/unsubscribe
+Content-Type: application/json
+
+{
+  "email": "student@example.com"
+}
+
+### Generate deleted-orders summary PDF
+GET {{baseUrl}}/reports/summary
+
+### Get system metrics (CloudWatch, freestyle enhancement)
+GET {{baseUrl}}/metrics
