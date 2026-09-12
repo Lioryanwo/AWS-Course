@@ -1,6 +1,36 @@
 # Order Management System — Event-Driven Serverless
 
+![Status](https://img.shields.io/badge/status-deployed%20%26%20verified-brightgreen)
+![AWS](https://img.shields.io/badge/AWS-serverless-orange)
+![Region](https://img.shields.io/badge/region-us--east--1-blue)
+![Runtime](https://img.shields.io/badge/lambda-python%203.11-blue)
+
 A serverless, event-driven Order Management System built on API Gateway, Lambda, DynamoDB, DynamoDB Streams, S3, SNS, and CloudWatch, with a static web client hosted on AWS Amplify.
+
+## Live Demo
+
+| | |
+|---|---|
+| **Client (Amplify)** | https://feature-order-management-system.d3s37t68mari98.amplifyapp.com |
+| **API base URL** | `https://b849mbwba8.execute-api.us-east-1.amazonaws.com/prod` |
+| **Region** | `us-east-1` |
+
+## Table of Contents
+
+- [Live Demo](#live-demo)
+- [Architecture](#architecture)
+- [Client (Frontend)](#client-frontend)
+- [DynamoDB Key Design](#dynamodb-key-design)
+- [Lambda Functions (10 total)](#lambda-functions-10-total)
+- [S3 Bucket](#s3-bucket)
+- [Freestyle Enhancement: CloudWatch Metrics API](#freestyle-enhancement-cloudwatch-metrics-api)
+- [API List](#api-list)
+- [Lambda Environment Variables](#lambda-environment-variables)
+- [IAM Permissions (`LabRole`)](#iam-permissions-labrole)
+- [Deployment Verification Checklist](#deployment-verification-checklist)
+- [Building the PDF Lambda Layer](#building-the-pdf-lambda-layer)
+- [Repository Structure](#repository-structure)
+- [Deployment Status](#deployment-status)
 
 ## Architecture
 
@@ -29,6 +59,16 @@ API Gateway (REST API)
 ```
 
 **Why this shape:** deleting an order must never wait on notification or backup. `delete_order` performs a single `DeleteItem` call and returns immediately. The DynamoDB Stream on the `orders` table is the actual event source for everything downstream — `process_deleted_order` is invoked independently, after the delete has already completed and been returned to the client, and handles the S3 backup and SNS publish as two independently-failing steps (a failure in one never suppresses the other).
+
+## Client (Frontend)
+
+Static HTML/CSS/vanilla JS, hosted on AWS Amplify, calling the API above and only the API — no business logic on the client. Beyond the 9 required operations, the UI includes:
+
+- **Dashboard summary cards** — active order count and three of the CloudWatch metrics, computed from data the client already fetches (no extra API calls).
+- **Toast notifications + per-section status pills** — every action reports its real HTTP status back to the user, success or failure.
+- **Collapsible "API Response" panels** — the raw JSON response is always available (per the assignment's "always display the result returned from the backend" requirement), tucked behind a `<details>` toggle so the UI stays clean.
+- **A live API-status badge** in the header, based on the actual result of the initial `GET /orders` and `GET /metrics` calls on page load.
+- **Semantic button colors** — creation/subscribe in green, update in amber, delete/unsubscribe in red, informational actions in blue.
 
 ## DynamoDB Key Design
 
@@ -95,6 +135,8 @@ Labels are deliberately named after what these built-in metrics *are* (invocatio
 | Get system metrics (freestyle) | GET | `/metrics` | returns `{windowHours, metrics}` |
 
 See [examples/sample-requests.http](examples/sample-requests.http) for full sample request/response bodies (source for the deliverable doc's API table).
+
+**Note on Unsubscribe:** a `404 "No confirmed subscription found"` is expected — not a bug — when the given email was never subscribed, was already unsubscribed, or is still in SNS's `PendingConfirmation` state (an unconfirmed subscription has no real `SubscriptionArn`, and SNS provides no API to cancel one). It only auto-resolves by the user confirming it or by SNS's ~3-day auto-expiry. `unsubscribe_notification.py` allowlists only real `arn:aws:sns:` ARNs when searching for a match, so a confirmed subscription unsubscribes cleanly with a `200`.
 
 ## Lambda Environment Variables
 
@@ -188,6 +230,18 @@ AWS-Final-Project-Order-Management/
 
 ## Deployment Status
 
-**Not yet deployed.** All resources (DynamoDB table + GSI + Streams, S3 bucket, SNS topic, 10 Lambdas, API Gateway REST API, Amplify hosting) still need to be created manually in the AWS Academy Learner Lab, following the convention used by the sibling `serverless-chatbot` and `step-functions-project` folders in this repository (manual console/CLI setup under the `LabRole` execution role, `us-east-1`, no IaC).
+**Deployed and manually verified in AWS.**
 
-Before deploying, `frontend/script.js`'s `API_BASE_URL` placeholder must be replaced with the real API Gateway invoke URL.
+- Region: `us-east-1`
+- Client (Amplify): https://feature-order-management-system.d3s37t68mari98.amplifyapp.com
+- API Gateway: `https://b849mbwba8.execute-api.us-east-1.amazonaws.com/prod`
+
+### Verified flows
+
+- Create Order, Get All Orders, Get Specific Order, Update Order, Delete Order
+- SNS deletion-notification email delivery
+- Deleted order appears correctly in the generated PDF; PDF generation and download both work
+- Amplify frontend exercising every action against the live API
+- CloudWatch metrics rendering correctly in the frontend
+- Subscribe, confirmed via the SNS confirmation email
+- Unsubscribe of a confirmed subscription; the `404` for an unconfirmed/nonexistent one is expected behavior, not a bug (see [API List](#api-list))
