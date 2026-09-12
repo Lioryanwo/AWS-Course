@@ -34,29 +34,7 @@ A serverless, event-driven Order Management System built on API Gateway, Lambda,
 
 ## Architecture
 
-```text
-Browser (Amplify-hosted static site)
-     |
-     v
-API Gateway (REST API)
-     |
-     +--> create_order / get_orders / get_order / update_order / delete_order  --> DynamoDB table "orders"
-     |                                                                               |
-     |                                                                               v
-     |                                                                    DynamoDB Streams (REMOVE events)
-     |                                                                               |
-     |                                                                               v
-     |                                                              process_deleted_order (async consumer)
-     |                                                                        /              \
-     |                                                                       v                v
-     |                                                              S3 backups/*.txt     SNS topic --> confirmed email subscribers
-     |
-     +--> subscribe_notification / unsubscribe_notification  --> SNS topic (email protocol)
-     |
-     +--> generate_summary_pdf  --> reads S3 backups/*.txt, writes S3 summaries/*.pdf, returns a pre-signed URL
-     |
-     +--> get_metrics  --> reads CloudWatch (AWS/Lambda, AWS/ApiGateway built-in metrics)
-```
+![Architecture diagram](docs/architecture.png)
 
 **Why this shape:** deleting an order must never wait on notification or backup. `delete_order` performs a single `DeleteItem` call and returns immediately. The DynamoDB Stream on the `orders` table is the actual event source for everything downstream — `process_deleted_order` is invoked independently, after the delete has already completed and been returned to the client, and handles the S3 backup and SNS publish as two independently-failing steps (a failure in one never suppresses the other).
 
